@@ -1,4 +1,4 @@
 sabtris
 =======
 
-My implementation of tetris
+My Python implementation of tetris.
