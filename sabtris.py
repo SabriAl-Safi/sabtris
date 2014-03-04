@@ -10,8 +10,8 @@ WINDOWWIDTH  = 450
 MOVEDELAY = 300
 ENDSCREENDELAY = 2000
 
-cellColour = {0:"white", 1:"blue", 2:"red", 3:"green",
-              4:"yellow", 5:"orange", 6:"cyan", 7:"purple",
+cellColour = {0:"white", 1:"cyan", 2:"yellow", 3:"red",
+              4:"lime", 5:"blue", 6:"orange", 7:"magenta",
               -1:"violet"}
 
 directions = {'space':'V', 'Left':'<', 'Right':'>', 'Down':'v'}
