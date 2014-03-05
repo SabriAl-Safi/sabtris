@@ -48,6 +48,7 @@ class GameMatrix:
         self.score = 0
         self.totalLinesCleared = 0
         self.gameOver = False
+        self.level = 0
 
         #Control of piece currently in play.
         self.pieceInPlay = False
@@ -76,7 +77,7 @@ class GameMatrix:
 
     def receiveNudge(self, key):
         """
-        If a piece is in play, move it according to given direction.
+        If a piece is in play, move it according to key.
         """
         if self.pieceInPlay:
             if key == 'V':
@@ -91,15 +92,6 @@ class GameMatrix:
         """
         if self.pieceInPlay:
             self.rotatePlayPiece(key)
-
-    def nextStep(self):
-        """
-        Proceed one step in the simulation.
-        """
-        rowsCleared = self.clearLines()
-        if rowsCleared:
-            self.updateGameStats(rowsCleared)
-            self.reshiftRows(rowsCleared)
 
     #-------- Internal Functions--------------------------------------------
 
@@ -277,14 +269,8 @@ class GameMatrix:
             
         elif direction == 'v':
             #If the requested move is downwards but not possible, lock the
-            #piece, reset control data and check to see if any lines should
-            #be cleared.
-            self.pieceInPlay = False
-            self.activeCells = []
-            self.activeType = 0
-            self.activeOrientation = 0
-            self.activeTopLeftCorner = []
-            self.nextStep()
+            #piece.
+            self.lockPlayPiece()
 
     def checkMovementPossible(self, newActiveCells):
         """
@@ -315,3 +301,18 @@ class GameMatrix:
                 self.blocks[cell[0]][cell[1]] = 0
         #Re-assign list of active cells.
         self.activeCells = newActiveCells
+
+    def lockPlayPiece(self):
+        """
+        Reset control data and clear any lines that need to be cleared.
+        """
+        self.pieceInPlay = False
+        self.activeCells = []
+        self.activeType = 0
+        self.activeOrientation = 0
+        self.activeTopLeftCorner = []
+        
+        rowsCleared = self.clearLines()
+        if rowsCleared:
+            self.updateGameStats(rowsCleared)
+            self.reshiftRows(rowsCleared)
