@@ -110,13 +110,15 @@ class GameMatrix:
         else:
             return False
 
-    def updateGameStats(self, rowsCleared):
+    def updateGameStats(self, numRowsCleared):
         """
         Update game statistics after some rows have been cleared.
         """
-        numRowsCleared = len(rowsCleared)
         self.score += numRowsCleared*100
         self.totalLinesCleared += numRowsCleared
+        if (self.level < 10 and
+            (self.level+1) * 10 < self.totalLinesCleared):
+            self.level += 1
 
     def reshiftRows(self, rowsCleared):
         """
@@ -314,5 +316,5 @@ class GameMatrix:
         
         rowsCleared = self.clearLines()
         if rowsCleared:
-            self.updateGameStats(rowsCleared)
+            self.updateGameStats(len(rowsCleared))
             self.reshiftRows(rowsCleared)

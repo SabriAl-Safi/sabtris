@@ -9,6 +9,8 @@ WINDOWHEIGHT = 500
 WINDOWWIDTH  = 450
 MOVEDELAY = 300
 ENDSCREENDELAY = 2000
+FLASHTEXTONDELAY = 1000
+FLASHTEXTOFFDELAY = 700
 
 cellColour = {0:"white", 1:"cyan", 2:"yellow", 3:"red",
               4:"green", 5:"blue", 6:"orange", 7:"magenta",
@@ -24,31 +26,79 @@ class GameBoard(Canvas):
                         background='black', highlightthickness=0)
         self.parent = parent 
         self.initGame()
-        self.inGame = False
-        self.startScreen = True
         self.pack()
 
     def initGame(self):
-        self.delete(ALL)
-        self.gameMatrix = matris.GameMatrix(GAMEHEIGHT, GAMEWIDTH)
-
-        self.create_text(WINDOWWIDTH/2, WINDOWHEIGHT/3,
-                         font = 'Helvetica 48 bold',
-                         text='sabtris', fill='white', activefill='blue')
-        self.create_text(WINDOWWIDTH/2, 2*WINDOWHEIGHT/3,
-                         text='Press s to start', fill='white',
-                         activefill='blue', font='Purisa')
-        self.create_text(WINDOWWIDTH/2, 2*WINDOWHEIGHT/3 + 100,
-                         text='arrow keys to move | z/x to rotate | spacebar to drop | q to quit',
-                         fill='white', activefill='blue',
-                         font='Helvetica 8 italic')
+        self.startScreen = True
+        self.controlsScreen = False
+        self.inGame = False
+        self.controlsScreenFlashTextOn = False
+        self.startScreenFlashTextOn = False
+        self.drawStartScreen()
         self.focus_get()
         self.bind_all('<Key>', self.onKeyPress)
         self.startScreen = True
 
-    def drawGameScreen(self):
+    def drawStartScreen(self):
+        '''
+        Draw the game's start screen.
+        '''
+        if self.startScreen:
+            self.delete(ALL)
+            self.create_text(WINDOWWIDTH/2, WINDOWHEIGHT/3,
+                             font = 'Helvetica 48 bold',
+                             text='sabtris',
+                             fill='white',
+                             activefill='blue')
 
-        #Delete and redraw the main game screen.
+            if self.startScreenFlashTextOn == True:
+                self.create_text(WINDOWWIDTH/2, 400,
+                                 text='s to start, c for controls',
+                                 fill='white',
+                                 activefill='blue',
+                                 font='Purisa')
+                self.startScreenFlashTextOn = False
+                self.after(FLASHTEXTONDELAY, self.drawStartScreen)
+            else:
+                self.startScreenFlashTextOn = True
+                self.after(FLASHTEXTOFFDELAY, self.drawStartScreen)
+    
+
+    def drawControlsScreen(self):
+        '''
+        Draw the game's controls info screen.
+        '''
+        if self.controlsScreen:
+            self.delete(ALL)
+            self.create_text(150, 200,
+                             text='arrows ------------------------ move\n' +
+                                  'z/x ---------------------------- rotate\n' +
+                                  'spacebar --------------------- drop\n' +
+                                  'q -------------------------------- quit\n' +
+                                  'p ----------------------------- pause\n' +
+                                  'r ---------------------------- restart\n',
+                             fill='white',
+                             activefill='blue',
+                             font='Helvetica 8 italic',
+                             anchor=W)
+
+            if self.controlsScreenFlashTextOn == True:
+                self.create_text(WINDOWWIDTH/2, 400,
+                                 text='Hit enter to return',
+                                 fill='white',
+                                 activefill='blue',
+                                 font='Helvetica',
+                                 tags='flashText')
+                self.controlsScreenFlashTextOn = False
+                self.after(FLASHTEXTONDELAY, self.drawControlsScreen)
+            else:
+                self.controlsScreenFlashTextOn = True
+                self.after(FLASHTEXTOFFDELAY, self.drawControlsScreen)
+
+    def drawGameScreen(self):
+        '''
+        Delete and redraw the main game screen.
+        '''      
         self.delete('gameScreen')
         for col in range(GAMEWIDTH):
             xPosition = 100+(col*20)
@@ -69,8 +119,9 @@ class GameBoard(Canvas):
                                  tags='gameScreen')
 
     def drawSpawnPiece(self):
-        
-        #Delete and redraw the spawn piece.
+        '''
+        Delete and redraw the piece next to be spawned.
+        '''
         self.delete('spawnPiece')
         for col in range(len(self.gameMatrix.spawn[0])):
             xPosition = 350+(col*20)
@@ -86,11 +137,13 @@ class GameBoard(Canvas):
                                      tags='spawnPiece')
 
     def drawGameData(self):
-        
-        #Delete and redraw game data.
+        '''
+        Delete and redraw the game data.
+        '''
         self.delete('gameData')
         scoreText = 'Score: ' + str(self.gameMatrix.score)
         linesText = 'Lines: ' + str(self.gameMatrix.totalLinesCleared)
+        levelText = 'Level: ' + str(self.gameMatrix.level)
         self.create_text(350, 150,
                          fill='white',
                          text=scoreText,
@@ -100,7 +153,12 @@ class GameBoard(Canvas):
                          fill='white',
                          text=linesText,
                          anchor=W,
-                         tags='gameData') 
+                         tags='gameData')
+        self.create_text(350, 190,
+                         fill='white',
+                         text=levelText,
+                         anchor=W,
+                         tags='gameData')
 
     def onKeyPress(self, keyPress):
         key = keyPress.keysym
@@ -108,15 +166,31 @@ class GameBoard(Canvas):
         if self.startScreen:
             
             if key == 's':
+                #Begin the game.
+                self.startScreen = False
+                self.inGame = True
                 self.delete(ALL)
+                self.gameMatrix = matris.GameMatrix(GAMEHEIGHT, GAMEWIDTH)
                 self.gameMatrix.generateSpawn()
                 self.gameMatrix.spawnTetronimo()
                 self.drawGameScreen()
                 self.drawSpawnPiece()
                 self.drawGameData()
+                self.after(MOVEDELAY, self.inGameTimer)
+
+            if key == 'c':
+                #Go to the controls info screen.
                 self.startScreen = False
-                self.inGame = True
-                self.after(MOVEDELAY, self.onTimer)
+                self.controlsScreen = True
+                self.drawControlsScreen()
+
+        elif self.controlsScreen:
+
+            if key == 'Return':
+                #Return from controls info screen to start screen.
+                self.controlsScreen = False
+                self.startScreen = True
+                self.drawStartScreen()
 
         elif self.inGame:
 
@@ -131,7 +205,7 @@ class GameBoard(Canvas):
         if key == 'q':
             quit()
 
-    def onTimer(self):
+    def inGameTimer(self):
         
         if not self.inGame:
             self.delete(ALL)
@@ -143,16 +217,16 @@ class GameBoard(Canvas):
         elif self.gameMatrix.pieceInPlay:            
             self.gameMatrix.receiveNudge('v')
             self.drawGameScreen()
-            self.after(MOVEDELAY, self.onTimer)
+            self.after(MOVEDELAY, self.inGameTimer)
             
         elif self.gameMatrix.spawnReady:            
             self.gameMatrix.spawnTetronimo()
             self.drawSpawnPiece()
             self.drawGameData()
-            self.after(MOVEDELAY, self.onTimer)
+            self.after(MOVEDELAY, self.inGameTimer)
             
         else:            
-            self.after(MOVEDELAY, self.onTimer)
+            self.after(MOVEDELAY, self.inGameTimer)
 
         self.drawGameData()
         
