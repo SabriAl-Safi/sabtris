@@ -11,7 +11,7 @@ MOVEDELAY = 300
 ENDSCREENDELAY = 2000
 
 cellColour = {0:"white", 1:"cyan", 2:"yellow", 3:"red",
-              4:"lime", 5:"blue", 6:"orange", 7:"magenta",
+              4:"green", 5:"blue", 6:"orange", 7:"magenta",
               -1:"violet"}
 
 directions = {'space':'V', 'Left':'<', 'Right':'>', 'Down':'v'}
@@ -25,6 +25,7 @@ class GameBoard(Canvas):
         self.parent = parent 
         self.initGame()
         self.inGame = False
+        self.startScreen = True
         self.pack()
 
     def initGame(self):
@@ -43,6 +44,7 @@ class GameBoard(Canvas):
                          font='Helvetica 8 italic')
         self.focus_get()
         self.bind_all('<Key>', self.onKeyPress)
+        self.startScreen = True
 
     def drawGameScreen(self):
         self.delete(ALL)
@@ -86,43 +88,50 @@ class GameBoard(Canvas):
 
     def onKeyPress(self, keyPress):
         key = keyPress.keysym
-        if key == 's' and not self.inGame:
-            self.delete(ALL)
-            self.gameMatrix.generateSpawn()
-            self.gameMatrix.spawnTetronimo()
-            self.drawGameScreen()
-            self.inGame = True
-            self.after(MOVEDELAY, self.onTimer)
+        
+        if self.startScreen:
+            
+            if key == 's':
+                self.delete(ALL)
+                self.gameMatrix.generateSpawn()
+                self.gameMatrix.spawnTetronimo()
+                self.drawGameScreen()
+                self.startScreen = False
+                self.inGame = True
+                self.after(MOVEDELAY, self.onTimer)
 
-        elif key in directions and self.inGame == True:
-            self.gameMatrix.receiveNudge(directions[key])
-            self.drawGameScreen()
+        elif self.inGame:
 
-        elif key in rotations and self.inGame == True:
-            self.gameMatrix.receiveRotation(rotations[key])
-            self.drawGameScreen()
+            if key in directions:
+                self.gameMatrix.receiveNudge(directions[key])
+                self.drawGameScreen()
+
+            elif key in rotations:
+                self.gameMatrix.receiveRotation(rotations[key])
+                self.drawGameScreen()
 
         elif key == 'q':
             quit()
 
     def onTimer(self):
-        if self.inGame == False:
+        
+        if not self.inGame:
             self.delete(ALL)
             self.create_text(WINDOWWIDTH/2, WINDOWHEIGHT/2,
                              font = 'Helvetica 36 bold',
                              text='GAME OVER', fill='white')
             self.after(ENDSCREENDELAY, self.initGame)
         
-        elif self.gameMatrix.pieceInPlay:
+        elif self.gameMatrix.pieceInPlay:            
             self.gameMatrix.receiveNudge('v')
             self.drawGameScreen()
             self.after(MOVEDELAY, self.onTimer)
             
-        elif self.gameMatrix.spawnReady:
+        elif self.gameMatrix.spawnReady:            
             self.gameMatrix.spawnTetronimo()
             self.after(MOVEDELAY, self.onTimer)
             
-        else:
+        else:            
             self.after(MOVEDELAY, self.onTimer)
         
 class Sabtris(Frame):
