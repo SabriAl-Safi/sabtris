@@ -47,9 +47,9 @@ class GameBoard(Canvas):
         self.startScreen = True
 
     def drawGameScreen(self):
-        self.delete(ALL)
 
-        #Print the main game screen.
+        #Delete and redraw the main game screen.
+        self.delete('gameScreen')
         for col in range(GAMEWIDTH):
             xPosition = 100+(col*20)
             for row in range(GAMEHEIGHT):
@@ -63,10 +63,15 @@ class GameBoard(Canvas):
                 else:
                     blockText = '#'
                     self.inGame = False
-                self.create_text(xPosition, yPosition, fill=fillColour,
-                                 text=blockText)
+                self.create_text(xPosition, yPosition,
+                                 fill=fillColour,
+                                 text=blockText,
+                                 tags='gameScreen')
 
-        #Print the spawn piece.
+    def drawSpawnPiece(self):
+        
+        #Delete and redraw the spawn piece.
+        self.delete('spawnPiece')
         for col in range(len(self.gameMatrix.spawn[0])):
             xPosition = 350+(col*20)
             for row in range(len(self.gameMatrix.spawn)):
@@ -75,16 +80,27 @@ class GameBoard(Canvas):
                 fillColour = cellColour[block]
                 if not block == 0:
                     blockText = 'O'
-                else:
-                    blockText = '.'
-                self.create_text(xPosition, yPosition, fill=fillColour,
-                                 text=blockText)
+                    self.create_text(xPosition, yPosition,
+                                     fill=fillColour,
+                                     text=blockText,
+                                     tags='spawnPiece')
 
-        #Print game data.
+    def drawGameData(self):
+        
+        #Delete and redraw game data.
+        self.delete('gameData')
         scoreText = 'Score: ' + str(self.gameMatrix.score)
         linesText = 'Lines: ' + str(self.gameMatrix.totalLinesCleared)
-        self.create_text(350, 150, fill='white', text=scoreText, anchor=W)
-        self.create_text(350, 170, fill='white', text=linesText, anchor=W) 
+        self.create_text(350, 150,
+                         fill='white',
+                         text=scoreText,
+                         anchor=W,
+                         tags='gameData')
+        self.create_text(350, 170,
+                         fill='white',
+                         text=linesText,
+                         anchor=W,
+                         tags='gameData') 
 
     def onKeyPress(self, keyPress):
         key = keyPress.keysym
@@ -96,6 +112,8 @@ class GameBoard(Canvas):
                 self.gameMatrix.generateSpawn()
                 self.gameMatrix.spawnTetronimo()
                 self.drawGameScreen()
+                self.drawSpawnPiece()
+                self.drawGameData()
                 self.startScreen = False
                 self.inGame = True
                 self.after(MOVEDELAY, self.onTimer)
@@ -110,7 +128,7 @@ class GameBoard(Canvas):
                 self.gameMatrix.receiveRotation(rotations[key])
                 self.drawGameScreen()
 
-        elif key == 'q':
+        if key == 'q':
             quit()
 
     def onTimer(self):
@@ -129,10 +147,14 @@ class GameBoard(Canvas):
             
         elif self.gameMatrix.spawnReady:            
             self.gameMatrix.spawnTetronimo()
+            self.drawSpawnPiece()
+            self.drawGameData()
             self.after(MOVEDELAY, self.onTimer)
             
         else:            
             self.after(MOVEDELAY, self.onTimer)
+
+        self.drawGameData()
         
 class Sabtris(Frame):
     def __init__(self, parent):
