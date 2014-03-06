@@ -30,6 +30,8 @@ tetronimo = {
                   [0, 0, 0] ]
              }
 
+numLinesScore = { 1:40, 2:100, 3:300, 4:1200 }
+
 class GameMatrix:
     """
     Matrix representing current state of play.
@@ -37,7 +39,7 @@ class GameMatrix:
 
     #-------- Initialisation constructor -----------------------------------
     
-    def __init__(self, height, width):
+    def __init__(self, height, width, initLevel):
         self.blocks = [ [ 0
                           for col in range(width) ]
                         for row in range(height) ]
@@ -47,8 +49,7 @@ class GameMatrix:
         self.width = width
         self.score = 0
         self.totalLinesCleared = 0
-        self.gameOver = False
-        self.level = 0
+        self.level = initLevel
 
         #Control of piece currently in play.
         self.pieceInPlay = False
@@ -56,6 +57,7 @@ class GameMatrix:
         self.activeType = 0
         self.activeOrientation = 0
         self.activeTopLeftCorner = []
+        self.dropDelay = 300 - (self.level*20)
         
         #Control of piece ready to be spawned.
         self.spawn = []
@@ -114,11 +116,12 @@ class GameMatrix:
         """
         Update game statistics after some rows have been cleared.
         """
-        self.score += numRowsCleared*100
+        self.score += (self.level+1)*numLinesScore[numRowsCleared]
         self.totalLinesCleared += numRowsCleared
-        if (self.level < 10 and
-            (self.level+1) * 10 < self.totalLinesCleared):
+        if (self.level+1) * 10 < self.totalLinesCleared:
             self.level += 1
+            if self.level <= 10:
+                self.dropDelay = 300 - 20*(self.level)
 
     def reshiftRows(self, rowsCleared):
         """
@@ -141,7 +144,7 @@ class GameMatrix:
         """
         spawnSize = len(self.spawn[0])
         insertFrom = int((self.width/2) - ((spawnSize+1)/2))
-        gameOver = False
+        
         for row in range(spawnSize):
             for col in range(spawnSize):
                 #Insert spawn shape into matrix.
@@ -156,17 +159,16 @@ class GameMatrix:
                         #Spawn cell clashes with a settled piece. Game over!
                         self.blocks[row][insertFrom + col] = -1
 
-        if not self.gameOver:
-            #Update control data.
-            self.pieceInPlay = True
-            self.activeType = self.spawnType
-            self.activeOrientation = self.spawnOrientation
-            self.activeTopLeftCorner = [0, insertFrom]
-            self.spawn = []
-            self.spawnReady = False
-            self.spawnType = 0
-            self.spawnOrientation = 0
-            self.generateSpawn()
+        #Update control data.
+        self.pieceInPlay = True
+        self.activeType = self.spawnType
+        self.activeOrientation = self.spawnOrientation
+        self.activeTopLeftCorner = [0, insertFrom]
+        self.spawn = []
+        self.spawnReady = False
+        self.spawnType = 0
+        self.spawnOrientation = 0
+        self.generateSpawn()
 
     def rotatePlayPiece(self, direction):
         """
