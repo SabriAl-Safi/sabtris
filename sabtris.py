@@ -12,7 +12,7 @@ CELLSIZE = 18
 
 #Timer delays.
 ENDSCREENDELAY = 2000
-FLASHTEXTDELAY = 500
+FLASHTEXTDELAY = 300
 
 #Colours of tetronimo pieces.
 cellColour = {0:"white", 1:"cyan", 2:"yellow", 3:"red",
@@ -21,7 +21,7 @@ cellColour = {0:"white", 1:"cyan", 2:"yellow", 3:"red",
 
 #Key controls.
 directions = {'space':'V', 'Left':'<', 'Right':'>', 'Down':'v'}
-rotations = {'z':'[', 'x':']'}             
+rotations = {'z':'[', 'x':']'}
 
 class GameBoard(Canvas):
     def __init__(self, parent):
@@ -426,7 +426,7 @@ class GameBoard(Canvas):
 
             if key == 'Left' and self.levelSelected:
                 #Decrease start level.
-                if self.initLevel > 0: self.interval -= 1
+                if self.initLevel > 0: self.initLevel -= 1
 
             if key == 'Return':
                 if self.returnSelected:
